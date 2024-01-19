@@ -61,15 +61,7 @@ struct zadacha_2 {
 
 
 
-
-int main() {
-
-	setlocale(LC_ALL, "Russian"); // Корректный вывод руского текста
-
-	zadacha_1 iniz1; //объявление переменной iniz1 (хранение данных о трубопроводе) типа zadacha_1
-	zadacha_2 iniz2(iniz1);
-
-
+void calculatePressure(zadacha_1& iniz1, zadacha_2& iniz2) {
 	double d_1 = (iniz1.D - 2 * iniz1.b) * pow(10, -3);
 	double V = 4 * iniz1.q / (3.14 * pow(d_1, 2));
 	double Re = V * d_1 / (iniz1.nu * pow(10, -6));
@@ -85,12 +77,9 @@ int main() {
 	double p_n = (iniz1.p_k / (iniz1.density * 9.81) + iniz1.z_0 - iniz1.z_l + Lyam * (iniz1.L / d_1 * pow(V, 2) / 2 / 9.91)) * (iniz1.density * 9.81);
 
 	cout << "Результат: " << p_n << "Па";
+}
 
-
-	int index = 0;
-
-
-
+void calculateFlowAndIterations(zadacha_1& iniz1, zadacha_2& iniz2, double& V, double& Re, int& index, double& p_n) {
 	do {
 		iniz2.lamd = iniz2.lamd_2;
 		V = pow(((((p_n - iniz1.p_k) / (iniz1.density * iniz1.g) + iniz1.z_0 - iniz1.z_l) * 2 * iniz1.g * iniz1.d_m) / (iniz2.lamd * iniz1.L)), 0.5);
@@ -99,14 +88,31 @@ int main() {
 
 		index++;
 
-
 	} while (abs(iniz2.lamd_2 - iniz2.lamd) > iniz2.epsilon);
-
 
 	std::cout << "Скорость: " << V << std::endl;
 	std::cout << "Количество итераций: " << index << std::endl;
 
 	double Q = 3.14 * pow(iniz1.d_m, 2) / V;
 
-	std::cout << "Расход: " << Q << std::endl; //123
+	std::cout << "Расход: " << Q << std::endl;
+
+}
+
+
+int main() {
+	setlocale(LC_ALL, "Russian"); // Корректный вывод руского текста
+
+	zadacha_1 iniz1; //объявление переменной iniz1 (хранение данных о трубопроводе) типа zadacha_1
+	zadacha_2 iniz2(iniz1);
+
+	double V, Re, p_n;
+
+	int index = 0;
+
+	calculatePressure(iniz1, iniz2);
+
+	calculateFlowAndIterations(iniz1, iniz2, V, Re, index, p_n);
+
+	return 0;
 }
