@@ -6,6 +6,7 @@
 #include <cmath> // для использования функции pow
 using namespace std;
 
+/// @brief Данные по задаче 1
 struct zadacha_1 {
 	double L; //длина трубопровода
 	double D; //внешний диаметр трубопровода
@@ -41,6 +42,7 @@ struct zadacha_1 {
 };
 
 
+/// @brief Данные по задаче 2
 struct zadacha_2 {
 
 	double Z;
@@ -60,8 +62,11 @@ struct zadacha_2 {
 };
 
 
-
-void calculatePressure(zadacha_1& iniz1, zadacha_2& iniz2) {
+/// @brief Задача 1
+/// @param iniz1 
+/// @param iniz2 
+/// @return 
+double calculatePressure(zadacha_1& iniz1, zadacha_2& iniz2) {
 	double d_1 = (iniz1.D - 2 * iniz1.b) * pow(10, -3);
 	double V = 4 * iniz1.q / (3.14 * pow(d_1, 2));
 	double Re = V * d_1 / (iniz1.nu * pow(10, -6));
@@ -76,9 +81,18 @@ void calculatePressure(zadacha_1& iniz1, zadacha_2& iniz2) {
 
 	double p_n = (iniz1.p_k / (iniz1.density * 9.81) + iniz1.z_0 - iniz1.z_l + Lyam * (iniz1.L / d_1 * pow(V, 2) / 2 / 9.91)) * (iniz1.density * 9.81);
 
-	cout << "Результат: " << p_n << "Па";
+	cout << "Результат: " << p_n << "Па" << endl;
+
+	return p_n;
 }
 
+/// @brief Задача 2
+/// @param iniz1 
+/// @param iniz2 
+/// @param V 
+/// @param Re 
+/// @param index 
+/// @param p_n 
 void calculateFlowAndIterations(zadacha_1& iniz1, zadacha_2& iniz2, double& V, double& Re, int& index, double& p_n) {
 	do {
 		iniz2.lamd = iniz2.lamd_2;
@@ -98,7 +112,8 @@ void calculateFlowAndIterations(zadacha_1& iniz1, zadacha_2& iniz2, double& V, d
 	std::cout << "Расход: " << Q << std::endl;
 
 }
-
+/// @brief 
+/// @return 
 
 int main() {
 	setlocale(LC_ALL, "Russian"); // Корректный вывод руского текста
@@ -110,7 +125,7 @@ int main() {
 
 	int index = 0;
 
-	calculatePressure(iniz1, iniz2);
+	p_n = calculatePressure(iniz1, iniz2);
 
 	calculateFlowAndIterations(iniz1, iniz2, V, Re, index, p_n);
 
