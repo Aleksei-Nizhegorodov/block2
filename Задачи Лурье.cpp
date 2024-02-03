@@ -4,7 +4,10 @@
 #include <stdio.h> 
 #include <vector> 
 #include <cmath> // для использования функции pow
+#include <fixed/fixed.h>
+#include <pde_solvers/pde_solvers.h>
 using namespace std;
+using namespace pde_solvers;
 
 /// @brief Данные по задаче 1
 struct zadacha_1 {
@@ -63,36 +66,33 @@ struct zadacha_2 {
 
 
 /// @brief Задача 1
-/// @param iniz1 
-/// @param iniz2 
+/// @param iniz1 ссылка на данные по задаче 1
 /// @return 
 double calculatePressure(zadacha_1& iniz1, zadacha_2& iniz2) {
 	double d_1 = (iniz1.D - 2 * iniz1.b) * pow(10, -3); // внутренний диаметр трубопровода, м
-	double V = 4 * iniz1.q / (3.14 * pow(d_1, 2));
+	double V = 4 * iniz1.q / (M_PI * pow(d_1, 2));
 	double Re = V * d_1 / (iniz1.nu * pow(10, -6));
-	double e = iniz1.nu * pow(10, -2) / iniz1.d;
-	double Lyam;
-	if (Re < 2300)
-		Lyam = 64 / Re;
-	else if (Re > 500 / e)
-		Lyam = 0.11 * pow(e, 0.25);
-	else if (Re > 2300)
-		Lyam = 0.11 * pow((e + 68 / Re), 0.25);
+	double e = iniz1.nu * pow(10, -2) / iniz1.d_m;
+	double Lyam = 0; // Необходимо определить это значение
 
-	double p_n = (iniz1.p_k / (iniz1.density * 9.81) + iniz1.z_0 - iniz1.z_l + Lyam * (iniz1.L / d_1 * pow(V, 2) / 2 / 9.91)) * (iniz1.density * 9.81); // значение начльного давления, МПа
+	double resistance = hydraulic_resistance_isaev(Re, e);
+
+	double p_n = (iniz1.p_k / (iniz1.density * 9.81) + iniz1.z_0 - iniz1.z_l + Lyam * (iniz1.L / 
+		d_1 * pow(V, 2) / 2 / 9.91)) * (iniz1.density * 9.81); // значение начльного давления, МПа
 
 	cout << "Результат: " << p_n << "Па" << endl;
 
 	return p_n;
 }
 
+
 /// @brief Задача 2
-/// @param iniz1 
-/// @param iniz2 
-/// @param V 
-/// @param Re 
-/// @param index 
-/// @param p_n 
+/// @param iniz1, ссылка на данные по задаче 1
+/// @param iniz2, ссылка на данные по задаче 2
+/// @param V, скорость [м/с]
+/// @param Re, число Рейнольдса
+/// @param index, указатель счетчика 
+/// @param p_n, давление в начале трубопровода [МПа]
 void calculateFlowAndIterations(zadacha_1& iniz1, zadacha_2& iniz2, double& V, double& Re, int& index, double& p_n) {
 	
 	// Нахождение lamd_2 методом последовательных приближений 
@@ -109,7 +109,7 @@ void calculateFlowAndIterations(zadacha_1& iniz1, zadacha_2& iniz2, double& V, d
 	std::cout << "Скорость: " << V << std::endl;
 	std::cout << "Количество итераций: " << index << std::endl;
 
-	double Q = 3.14 * pow(iniz1.d_m, 2) / V; // объемный расход, м^3/c
+	double Q = M_PI * pow(iniz1.d_m, 2) / V; // объемный расход, м^3/c
 
 	std::cout << "Расход: " << Q << std::endl; 
 
@@ -122,7 +122,7 @@ int main() {
 	setlocale(LC_ALL, "Russian"); // Корректный вывод руского текста
 
 	zadacha_1 iniz1; //объявление переменной iniz1 (хранение данных о трубопроводе) типа zadacha_1
-	zadacha_2 iniz2(iniz1); //объявление переменной iniz2(iniz1) (хранение данных о трубопроводе, ) типа zadacha_1 и zadacha_2
+	zadacha_2 iniz2(iniz1); //объявление переменной iniz2(iniz1) (хранение данных о трубопроводе, ) типа zadacha_2
 
 	double V, Re, p_n;
 
