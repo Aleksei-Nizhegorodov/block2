@@ -61,7 +61,7 @@ struct zadacha_2 {
 
 		Z = 0.15; // мм
 		lamd_2 = 0.02; 
-		epsilon = 1e-5;
+		epsilon = 1 * pow(10, (- 3.21)); //1e-5;
 		pp_n = 5 * pow(10, 6);
 		pp_k = 0.8 * pow(10, 6); 
 
@@ -87,7 +87,7 @@ double calculatePressure(zadacha_1& iniz1, zadacha_2& iniz2) {
 
 	double pogr = (6 * pow(10, 6) - p_n) /(6 * pow(10,6)) ; // Вычисление расхождения в расчетах программы и М.В.Лурье
 	
-	cout << "Результат: " << p_n << "Па" << endl; 
+	cout << "Результат: " << p_n << "Па" << endl;
 
 	return p_n;
 }
