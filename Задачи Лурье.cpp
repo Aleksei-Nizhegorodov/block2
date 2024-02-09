@@ -54,12 +54,16 @@ struct zadacha_2 {
 	double epsilon;		// допустимая погрешность 
 	double lamd; 
 	double sher;		// относительная шероховатость 
+	double pp_n;
+	double pp_k; 
 
 	zadacha_2(zadacha_1& iniz1) {
 
 		Z = 0.15; // мм
 		lamd_2 = 0.02; 
 		epsilon = 1e-5;
+		pp_n = 5 * pow(10, 6);
+		pp_k = 0.8 * pow(10, 6); 
 
 		sher = Z / iniz1.d;
 	}
@@ -105,7 +109,7 @@ void calculateFlowAndIterations(zadacha_1& iniz1, zadacha_2& iniz2,
 	do {
 		iniz2.lamd = iniz2.lamd_2; //предположили, что начльное значение lamd_2 = 0.02
 
-		V = pow(((iniz1.d_m * 2 * M_G / iniz1.L * ((p_n - iniz1.p_k) / (iniz1.density * M_G) 
+		V = pow(((iniz1.d_m * 2 * M_G / iniz1.L * ((iniz2.pp_n - iniz2.pp_k) / (iniz1.density * M_G) 
 			+ iniz1.z_0 - iniz1.z_l)) / iniz2.lamd), 0.5);
 		Re = V * iniz1.d_m / iniz1.nu / pow(10, -6);
 		iniz2.lamd_2 = 0.11 * pow(((iniz2.sher + 68 / Re)), 0.25);	//уточняем наше предположение (можно ли здесь использовать формулу исаева??????)
