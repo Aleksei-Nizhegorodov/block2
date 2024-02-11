@@ -1,11 +1,12 @@
-﻿#include <iomanip>					   // Необходимо для устранения ошибок 'setprecision': is not a member of 'std' ; 'setprecision': identifier not found (из-за бага в pde_solvers ) 
-#include <iostream> 
-#include <fstream> 
-#include <string.h> 
-#include <stdio.h> 
-#include <vector> 
-#include <cmath>                       // для использования функции pow
+﻿#include <iomanip>
+#include <clocale>
+#include <iostream>
+#include <vector>
+#include <fstream>
+#include <time.h>
+#include <algorithm>
 #include <fixed/fixed.h>
+#include <fixed/fixed_nonlinear_solver.h>
 #include <pde_solvers/pde_solvers.h>  // подключение библиотеки pde_solvers (В.В. Южанин)
 
 using namespace std;
@@ -70,7 +71,7 @@ struct zadacha_2 {
 };
 
 
-/// @brief Задача 1, PP
+/// @brief Задача 1, QP
 /// @param iniz1 ссылка на данные по задаче 1
 /// @return 
 double calculatePressure(zadacha_1& iniz1, zadacha_2& iniz2) {
@@ -93,7 +94,7 @@ double calculatePressure(zadacha_1& iniz1, zadacha_2& iniz2) {
 }
 
 
-/// @brief Задача 2, QP
+/// @brief Задача 2, PP
 /// @param iniz1, ссылка на данные по задаче 1
 /// @param iniz2, ссылка на данные по задаче 2
 /// @param V, скорость [м/с]
@@ -112,7 +113,7 @@ void calculateFlowAndIterations(zadacha_1& iniz1, zadacha_2& iniz2,
 		V = pow(((iniz1.d_m * 2 * M_G / iniz1.L * ((iniz2.pp_n - iniz2.pp_k) / (iniz1.density * M_G) 
 			+ iniz1.z_0 - iniz1.z_l)) / iniz2.lamd), 0.5);
 		Re = V * iniz1.d_m / iniz1.nu / pow(10, -6);
-		iniz2.lamd_2 = 0.11 * pow(((iniz2.sher + 68 / Re)), 0.25);	//уточняем наше предположение (можно ли здесь использовать формулу исаева??????)
+		iniz2.lamd_2 = 0.11 * pow(((iniz2.sher + 68 / Re)), 0.25);	//уточняем наше предположение 
 
 		index++;
 
@@ -129,6 +130,56 @@ void calculateFlowAndIterations(zadacha_1& iniz1, zadacha_2& iniz2,
 }
 /// @brief 
 /// @return 
+
+
+/// @brief задача РР Ньютон. Класс, для системы размерности <1>
+// <1> - Размерность системы уравнений
+class Newton : public fixed_system_t<1> {
+	
+	/// @brief ссылка на переменные в структурах 
+
+	const zadacha_1 iniz1;
+	const zadacha_2 iniz2;
+
+	using fixed_system_t<1>::var_type;
+
+public:
+
+	/// @brief конструктор
+	/// @param iniz1 данные по здаче 1
+	/// @param iniz2 данные по задаче 2
+	Newton(const zadacha_1& iniz1, const zadacha_2& iniz2);
+
+	/// @brief Задание функции невязок
+	/// @param V неизвестная величина
+	/// @return 
+	var_type residuals(const var_type& V)
+	{
+		double Re = V * iniz1.d_m / (iniz1.nu * pow(10, -6));
+		double resistance = hydraulic_resistance_isaev(Re, iniz2.sher);
+		double pp_n = (iniz2.pp_k / (iniz1.density * M_G) + iniz1.z_0 - iniz1.z_l + resistance
+			* (iniz1.L / iniz1.d_m * pow(V, 2) / 2 / M_G)) * (iniz1.density * M_G);
+
+		double delta_pp_n = iniz2.pp_n - pp_n;
+			
+	};
+};
+
+void u_Newton(struct zadacha_2& iniz2) {
+
+	// Создание экземпляра класса, который и будет решаемой системой
+	Newton test(iniz2);
+	// Задание настроек решателя по умолчанию
+	fixed_solver_parameters_t<1, 0> parameters;
+	// Создание структуры для записи результатов расчета
+	fixed_solver_result_t<1> result;
+	// Решение системы нелинейныйх уравнений <1> с помощью решателя Ньютона - Рафсона
+	// { 0, 0 } - Начальное приближение
+	fixed_newton_raphson<1>::solve_dense(test, { 1 }, parameters, &result);
+
+};
+
+
 
 
 int main() {
