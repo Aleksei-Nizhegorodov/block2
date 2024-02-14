@@ -68,9 +68,9 @@ struct zadacha_2 {
 	double epsilon;		// допустимая погрешность 
 	double lamd; 
 	double sher;		// относительная шероховатость 
-	double pp_n;
-	double pp_k; 
-	double initial_approximation; 
+	double pp_n;		// давление в начале 
+	double pp_k;		// давление в конце
+	
 
 	zadacha_2(zadacha_1& iniz1) {
 
@@ -168,7 +168,7 @@ public:
 
 	/// @brief Задание функции невязок
 	/// @param V неизвестная величина
-	/// @return 
+	/// @return ищем неизвестную V из уравнения Бернулли 
 	var_type residuals(const var_type& V)
 
 	{
@@ -183,10 +183,13 @@ public:
 	};
 };
 
+/// @brief Функция для решения методом Ньютона
+/// @param iniz1 данные по здаче 1
+/// @param iniz2 данные по задаче 2
 void Newton_1(zadacha_1& iniz1, zadacha_2& iniz2) {
 
 	// Создание экземпляра класса, который и будет решаемой системой
-
+	
 	Newton test(iniz1, iniz2);
 
 	// Задание настроек решателя по умолчанию
@@ -198,7 +201,7 @@ void Newton_1(zadacha_1& iniz1, zadacha_2& iniz2) {
 	fixed_solver_result_t<1> result;
 
 	// Решение системы нелинейныйх уравнений <1> с помощью решателя Ньютона - Рафсона
-	// { 1 } - Начальное приближение скорости 1
+	// { 0.4 } - Начальное приближение скорости 1
 	
 	fixed_newton_raphson<1>::solve_dense(test, { 0.4 }, parameters, &result);
 
@@ -222,11 +225,11 @@ int main() {
 
 	int index = 0;
 
-	p_n = calculatePressure(iniz1, iniz2);	// Находим знчение начального давления в задаче 1
+	p_n = calculatePressure(iniz1, iniz2);							// Находим знчение начального давления в задаче 1
 
-	calculateFlowAndIterations(iniz1, iniz2, V, Re, index, p_n); // решаем задачу 2, обращаясь к значению начального давления в задаче 1
+	calculateFlowAndIterations(iniz1, iniz2, V, Re, index, p_n);	// Решаем задачу 2
 
-	Newton_1(iniz1,iniz2);
+	Newton_1(iniz1,iniz2);											// Решение задачи PP методом Ньютона
 
 	return 0;
 }
