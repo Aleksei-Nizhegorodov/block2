@@ -27,6 +27,12 @@ struct zadacha_1 {
 	double d_m;		// внешний диаметр трубопровода [м]
 	double q;		// Объемный расход [м^3/с]
 
+	// дальше данные для решения методом Эйлера
+
+	double n;		//кол-во шагов стеки
+	double ch_w;	//касательное напряжение трения
+	double m;		//шаг по координате расчетной сетки, в метрах
+
 	zadacha_1() {
 
 		L = 80e3;	// км
@@ -43,6 +49,13 @@ struct zadacha_1 {
 		d = D - 2 * b;			// мм
 		d_m = d / 1000;			// м
 		q = Q / 3600;			// м3/с
+
+		// для решения методом Эйлера
+
+		n = 1000;
+		ch_w = 0;
+		m = L/n;
+
 	}
 };
 
@@ -57,16 +70,19 @@ struct zadacha_2 {
 	double sher;		// относительная шероховатость 
 	double pp_n;
 	double pp_k; 
+	double initial_approximation; 
 
 	zadacha_2(zadacha_1& iniz1) {
 
 		Z = 0.15; // мм
 		lamd_2 = 0.02; 
-		epsilon = 1 * pow(10, (- 3.21)); //1e-5;
+		epsilon = 5e-5; //1 * pow(10, (- 3.21));
 		pp_n = 5 * pow(10, 6);
 		pp_k = 0.8 * pow(10, 6); 
 
 		sher = Z / iniz1.d;
+
+
 	}
 };
 
@@ -104,15 +120,15 @@ double calculatePressure(zadacha_1& iniz1, zadacha_2& iniz2) {
 void calculateFlowAndIterations(zadacha_1& iniz1, zadacha_2& iniz2, 
 	double& V, double& Re, int& index, double& p_n) {
 	
-	//double v = iniz1.d_m * 2 * M_G / iniz1.L * ((p_n - iniz1.p_k) / (iniz1.density * M_G) + iniz1.z_0 - iniz1.z_l); для проверки по Лурье 
-
 	// Нахождение lamd_2 методом последовательных приближений 
 	do {
 		iniz2.lamd = iniz2.lamd_2; //предположили, что начльное значение lamd_2 = 0.02
 
 		V = pow(((iniz1.d_m * 2 * M_G / iniz1.L * ((iniz2.pp_n - iniz2.pp_k) / (iniz1.density * M_G) 
 			+ iniz1.z_0 - iniz1.z_l)) / iniz2.lamd), 0.5);
+
 		Re = V * iniz1.d_m / iniz1.nu / pow(10, -6);
+
 		iniz2.lamd_2 = 0.11 * pow(((iniz2.sher + 68 / Re)), 0.25);	//уточняем наше предположение 
 
 		index++;
@@ -123,7 +139,7 @@ void calculateFlowAndIterations(zadacha_1& iniz1, zadacha_2& iniz2,
 	std::cout << "Количество итераций: " << index << std::endl;
 
 	double Q_s = (M_PI * pow(iniz1.d_m, 2)) * V / 4;		//	объемный расход, м^3/c
-	double Q_h = Q_s * 3600;								// объемный расход, м^3/ч		
+	double Q_h = Q_s * 3600;								//  объемный расход, м^3/ч		
 
 	std::cout << "Расход: " << Q_h << std::endl; 
 
@@ -148,38 +164,51 @@ public:
 	/// @brief конструктор
 	/// @param iniz1 данные по здаче 1
 	/// @param iniz2 данные по задаче 2
-	Newton(const zadacha_1& iniz1, const zadacha_2& iniz2);
+	Newton(const zadacha_1& iniz1, const zadacha_2& iniz2) : iniz1(iniz1), iniz2(iniz2) {}
 
 	/// @brief Задание функции невязок
 	/// @param V неизвестная величина
 	/// @return 
 	var_type residuals(const var_type& V)
+
 	{
 		double Re = V * iniz1.d_m / (iniz1.nu * pow(10, -6));
-		double resistance = hydraulic_resistance_isaev(Re, iniz2.sher);
-		double pp_n = (iniz2.pp_k / (iniz1.density * M_G) + iniz1.z_0 - iniz1.z_l + resistance
-			* (iniz1.L / iniz1.d_m * pow(V, 2) / 2 / M_G)) * (iniz1.density * M_G);
-
-		double delta_pp_n = iniz2.pp_n - pp_n;
-			
+		double resistance = hydraulic_resistance_altshul (Re, iniz2.sher);
+		
+		return
+		{
+		 (iniz2.pp_n / (iniz1.density * M_G) + iniz1.z_0) - (iniz2.pp_k / (iniz1.density * M_G) + iniz1.z_l) 
+			- resistance * iniz1.L / iniz1.d_m * pow(V,2) / 2 / M_G
+		};
 	};
 };
 
-void u_Newton(struct zadacha_2& iniz2) {
+void Newton_1(zadacha_1& iniz1, zadacha_2& iniz2) {
 
 	// Создание экземпляра класса, который и будет решаемой системой
-	Newton test(iniz2);
+
+	Newton test(iniz1, iniz2);
+
 	// Задание настроек решателя по умолчанию
+
 	fixed_solver_parameters_t<1, 0> parameters;
+
 	// Создание структуры для записи результатов расчета
+
 	fixed_solver_result_t<1> result;
+
 	// Решение системы нелинейныйх уравнений <1> с помощью решателя Ньютона - Рафсона
-	// { 0, 0 } - Начальное приближение
-	fixed_newton_raphson<1>::solve_dense(test, { 1 }, parameters, &result);
+	// { 1 } - Начальное приближение скорости 1
+	
+	fixed_newton_raphson<1>::solve_dense(test, { 0.4 }, parameters, &result);
 
+	std::cout << "Скорость по Ньютону = " << result.argument << std::endl;
+
+	double Q_s = (M_PI * pow(iniz1.d_m, 2)) * result.argument / 4;		//	объемный расход, м^3/c
+	double Q_h = Q_s * 3600;											//  объемный расход, м^3/ч	
+
+	std::cout << "Расход по Ньютону = " << Q_h << std::endl;
 };
-
-
 
 
 int main() {
@@ -196,6 +225,8 @@ int main() {
 	p_n = calculatePressure(iniz1, iniz2);	// Находим знчение начального давления в задаче 1
 
 	calculateFlowAndIterations(iniz1, iniz2, V, Re, index, p_n); // решаем задачу 2, обращаясь к значению начального давления в задаче 1
+
+	Newton_1(iniz1,iniz2);
 
 	return 0;
 }
