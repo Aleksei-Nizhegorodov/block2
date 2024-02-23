@@ -203,7 +203,7 @@ void Newton_1(zadacha_1& iniz1, zadacha_2& iniz2) {
 	// Решение системы нелинейныйх уравнений <1> с помощью решателя Ньютона - Рафсона
 	// { 0.4 } - Начальное приближение скорости 1
 	
-	fixed_newton_raphson<1>::solve_dense(test, { 0.4 }, parameters, &result);
+	fixed_newton_raphson<1>::solve_dense(test, { 0.1 }, parameters, &result);
 
 	std::cout << "Скорость по Ньютону = " << result.argument << std::endl;
 
