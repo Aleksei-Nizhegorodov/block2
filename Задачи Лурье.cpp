@@ -8,7 +8,7 @@
 #include <fixed/fixed.h>
 #include <fixed/fixed_nonlinear_solver.h>
 #include <pde_solvers/pde_solvers.h>  // подключение библиотеки pde_solvers (В.В. Южанин)
-
+#include <gtest/gtest.h>
 using namespace std;
 using namespace pde_solvers;
 
@@ -107,6 +107,14 @@ double calculatePressure(zadacha_1& iniz1, zadacha_2& iniz2) {
 	cout << "Результат: " << p_n << "Па" << endl;
 
 	return p_n;
+}
+
+TEST(Block_2, Task_QP) {
+	zadacha_1 iniz1;
+	zadacha_2 iniz2(iniz1);
+
+	double p_n = round(calculatePressure(iniz1, iniz2));
+	EXPECT_EQ(5.99, p_n);
 }
 
 
