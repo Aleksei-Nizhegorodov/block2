@@ -33,6 +33,7 @@ struct zadacha_1 {
 	double ch_w;	//касательное напряжение трения
 	double m;		//шаг по координате расчетной сетки, в метрах
 
+
 	zadacha_1() {
 
 		L = 80e3;	// км
@@ -44,7 +45,6 @@ struct zadacha_1 {
 		nu = 15;				// сСт
 		Q = 3500;				// м3/ч
 		p_k = 0.6 * pow(10, 6); // Па
-		
 
 		d = D - 2 * b;			// мм
 		d_m = d / 1000;			// м
@@ -72,7 +72,7 @@ struct zadacha_2 {
 	double pp_k;		// давление в конце
 	
 
-	zadacha_2(zadacha_1& iniz1) {
+  zadacha_2(zadacha_1& iniz1) {
 
 		Z = 0.15; // мм
 		lamd_2 = 0.02; 
