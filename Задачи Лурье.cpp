@@ -125,11 +125,11 @@ double QP_EULER(zadacha_1& iniz1) {
 	double pressure_current;
 	double pressure_previous = iniz1.p_k;
 
-	for (size_t i = 0; i < iniz1.n; ++i) {
+	for (int i = 1; i <= iniz1.n; i++) {
 
 		pressure_current = pressure_previous - iniz1.h * (-4 * tw / iniz1.d_m - iniz1.density * M_G * ((iniz1.z_l - iniz1.z_0) / ((iniz1.n  - 1) * iniz1.h)));
 		
-		pressure_previous = pressure_current;
+		pressure_current = pressure_previous;
 
 	}
 
