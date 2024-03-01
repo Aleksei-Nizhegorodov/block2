@@ -8,7 +8,7 @@
 #include <fixed/fixed.h>
 #include <fixed/fixed_nonlinear_solver.h>
 #include <pde_solvers/pde_solvers.h>  // подключение библиотеки pde_solvers (В.В. Южанин)
-
+#include <gtest/gtest.h>
 using namespace std;
 using namespace pde_solvers;
 
@@ -30,8 +30,7 @@ struct zadacha_1 {
 	// дальше данные для решения методом Эйлера
 
 	double n;		//кол-во шагов стеки
-	double ch_w;	//касательное напряжение трения
-	double m;		//шаг по координате расчетной сетки, в метрах
+	double h;		//шаг по координате расчетной сетки, в метрах
 
 
 	zadacha_1() {
@@ -52,9 +51,8 @@ struct zadacha_1 {
 
 		// для решения методом Эйлера
 
-		n = 1000;
-		ch_w = 0;
-		m = L/n;
+		n = 10;
+		
 
 	}
 };
@@ -90,7 +88,7 @@ struct zadacha_2 {
 /// @brief Задача 1, QP
 /// @param iniz1 ссылка на данные по задаче 1
 /// @return 
-double calculatePressure(zadacha_1& iniz1, zadacha_2& iniz2) {
+double calculatePressure(zadacha_1& iniz1) {
 
 	double V = 4 * iniz1.q / (M_PI * pow(iniz1.d_m, 2));    // скорость в трубопровде
 	double Re = V * iniz1.d_m / (iniz1.nu * pow(10, -6));   // число Рейнольдса  
@@ -104,10 +102,50 @@ double calculatePressure(zadacha_1& iniz1, zadacha_2& iniz2) {
 
 	double pogr = (6 * pow(10, 6) - p_n) /(6 * pow(10,6)) ; // Вычисление расхождения в расчетах программы и М.В.Лурье
 	
-	cout << "Результат: " << p_n << "Па" << endl;
+	cout << "Задача QP: " << p_n << "Па" << endl;
 
 	return p_n;
 }
+
+
+double QP_EULER(zadacha_1& iniz1) {
+
+	double V = 4 * iniz1.q / (M_PI * pow(iniz1.d_m, 2));    // скорость в трубопровде
+	double Re = V * iniz1.d_m / (iniz1.nu * pow(10, -6));   // число Рейнольдса  
+	double e = iniz1.nu * pow(10, -2) / iniz1.d;            // шероховатость 
+
+
+	double resistance = hydraulic_resistance_isaev(Re, e);  // ф-ция расчета значения лямбды
+
+
+	double tw = resistance / 8 * iniz1.density * pow(V, 2);
+
+	double h = iniz1.L / iniz1.n;
+
+	double pressure_current;
+	double pressure_previous = iniz1.p_k;
+
+	for (int i = 1; i <= iniz1.n; i++) {
+
+		pressure_current = pressure_previous - iniz1.h * (-4 * tw / iniz1.d_m - iniz1.density * M_G * ((iniz1.z_l - iniz1.z_0) / ((iniz1.n  - 1) * iniz1.h)));
+		
+		pressure_current = pressure_previous;
+
+	}
+
+	std::cout << "Задача QP по Эйлеру: " << pressure_current << " Па" << std::endl;
+
+	return pressure_current;	
+}
+
+
+//TEST(Block_2, Task_QP) {
+//	zadacha_1 iniz1;
+//	zadacha_2 iniz2(iniz1);
+//
+//	double p_n = round(calculatePressure(iniz1, iniz2));
+//	EXPECT_EQ(5.99, p_n);
+//}
 
 
 /// @brief Задача 2, PP
@@ -214,6 +252,11 @@ void Newton_1(zadacha_1& iniz1, zadacha_2& iniz2) {
 };
 
 
+
+
+
+
+
 int main() {
 
 	setlocale(LC_ALL, "Russian"); // Корректный вывод руского текста
@@ -225,11 +268,16 @@ int main() {
 
 	int index = 0;
 
-	p_n = calculatePressure(iniz1, iniz2);							// Находим знчение начального давления в задаче 1
+	p_n = calculatePressure(iniz1);							// Находим знчение начального давления в задаче 1
+
+	double pressure_current = QP_EULER(iniz1);
 
 	calculateFlowAndIterations(iniz1, iniz2, V, Re, index, p_n);	// Решаем задачу 2
 
 	Newton_1(iniz1,iniz2);											// Решение задачи PP методом Ньютона
+
+	;
+	
 
 	return 0;
 }
