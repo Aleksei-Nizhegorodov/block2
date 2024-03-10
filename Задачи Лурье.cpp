@@ -90,10 +90,7 @@ struct massiv {
 };
 
 
-/// @brief Задача 1, QP
-/// @param iniz1 ссылка на данные по задаче 1
-/// @return 
-/// 
+
 TEST(Task_1, QP_Lurie) {
 
 		const zadacha_1 iniz1;
@@ -152,13 +149,6 @@ TEST(Task_2, QP_EULER) {
 
 
 
-/// @brief Задача 2, PP
-/// @param iniz1, ссылка на данные по задаче 1
-/// @param iniz2, ссылка на данные по задаче 2
-/// @param V, скорость [м/с]
-/// @param Re, число Рейнольдса
-/// @param index, указатель счетчика 
-/// @param p_n, давление в начале трубопровода [МПа]
 
 TEST(Task_3, calculateFlowAndIterations) {
 		zadacha_1 iniz1;
@@ -339,6 +329,65 @@ TEST(zadacha_5, PP_ABOVE_EULER_ON_NEWTON) {
 }
 
 
+
+TEST(zadacha_6, PP_ABOVE_EULER) {
+
+	setlocale(LC_ALL, "Russian");
+
+	zadacha_1 iniz1;
+	zadacha_2 iniz2(iniz1);
+
+	iniz1.h = iniz1.L / iniz1.n;
+
+	class PP_ABOVE_EULER : public fixed_system_t<1>
+	{
+		/// @brief Ссылка на структуру с параметрами трубы 
+		const zadacha_1 iniz1;
+		const zadacha_2 iniz2;
+		
+
+	using fixed_system_t<1>::var_type; public:
+
+		PP_ABOVE_EULER(const zadacha_1& iniz1, const zadacha_2& iniz2): iniz1(iniz1), iniz2(iniz2) {}
+
+		/// @brief Функция невязок - все члены уравнения Бернулли в правой части 
+		/// @param v - скорость течения нефти, [м/с] 
+		/// @return Значение функции невязок при заданной скорости 
+		var_type residuals(const var_type& V)
+		{ //V - искомая скорость
+			double Re = V * iniz1.d_m / (iniz1.nu * pow(10, -6));
+			double resistance = hydraulic_resistance_altshul(Re, iniz2.sher);
+			
+			 
+			double p_k = (iniz2.pp_n / (iniz1.density * M_G) - iniz1.z_l + iniz1.z_0 - resistance * (iniz1.L / iniz1.d_m) * pow(V, 2) / (2 * M_G)) * (iniz1.density * M_G);
+			double delta_p_L;
+
+			return //возвращает разницу между заданным давлением в конце и рассчитанным
+			{
+
+			   delta_p_L = iniz2.pp_k - p_k
+
+			};
+		};
+	};
+
+	// Создание экземпляра класса, который и будет решаемой системой
+	PP_ABOVE_EULER test(iniz1, iniz2);
+	// Задание настроек решателя по умолчанию
+	fixed_solver_parameters_t<1, 0> parameters;
+	// Создание структуры для записи результатов расчета
+	fixed_solver_result_t<1> result;
+	// Решение системы нелинейныйх уравнений <1> с помощью решателя Ньютона - Рафсона
+	// { 1} - Начальное приближение скорости 1 
+	fixed_newton_raphson<1>::solve_dense(test, { 1 }, parameters, &result);
+	std::cout  << "Классическая задача PP поверх метода Эйлера " << " V = " << result.argument << '\n' << "Расход " << "Q = " << result.argument * (3.14 * pow(iniz1.d_m, 2)) / 4 * 3600 << " м3/ч " << "\n";
+
+	double V = result.argument;
+	double abs_error = 10e6;
+	EXPECT_NEAR(6.03e6, V, abs_error);
+	
+
+}
 
 
 
