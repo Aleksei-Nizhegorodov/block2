@@ -93,6 +93,8 @@ struct massiv {
 
 TEST(Task_1, QP_Lurie) {
 
+	setlocale(LC_ALL, "Russian");
+
 		const zadacha_1 iniz1;
 
 		double V = 4 * iniz1.q / (M_PI * pow(iniz1.d_m, 2));    // скорость в трубопровде
@@ -115,6 +117,7 @@ TEST(Task_1, QP_Lurie) {
 }
 
 TEST(Task_2, QP_EULER) {
+	setlocale(LC_ALL, "Russian");
 
 	const zadacha_1 iniz1;
 
@@ -146,9 +149,6 @@ TEST(Task_2, QP_EULER) {
 	double error = 0.01e6;
 	EXPECT_NEAR(0.6e6, pressure_current, error);
 }
-
-
-
 
 TEST(Task_3, calculateFlowAndIterations) {
 		zadacha_1 iniz1;
@@ -182,7 +182,6 @@ TEST(Task_3, calculateFlowAndIterations) {
 	
 }
 
-
 TEST (Task_4, Newton){
 
 	setlocale(LC_ALL, "Russian");
@@ -190,8 +189,8 @@ TEST (Task_4, Newton){
 	zadacha_1 iniz1;
 	zadacha_2 iniz2(iniz1);
 
-/// @brief задача РР Ньютон. Класс, для системы размерности <1>
-// <1> - Размерность системы уравнений
+	/// @brief задача РР Ньютон. Класс, для системы размерности <1>
+	// <1> - Размерность системы уравнений
 	class Newton : public fixed_system_t<1> {
 
 		/// @brief ссылка на переменные в структурах 
@@ -253,7 +252,6 @@ TEST (Task_4, Newton){
 
 		EXPECT_NEAR(1.99, result.argument, error);
 };
-
 
 TEST(zadacha_5, PP_ABOVE_EULER_ON_NEWTON) {
 
@@ -327,8 +325,6 @@ TEST(zadacha_5, PP_ABOVE_EULER_ON_NEWTON) {
 	EXPECT_NEAR(1.99, result.argument, abs_error);
 
 }
-
-
 
 TEST(zadacha_6, PP_ABOVE_EULER) {
 
